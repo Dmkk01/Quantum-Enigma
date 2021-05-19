@@ -12,7 +12,7 @@ public class BoardManager : MonoBehaviour
     public static BoardManager Instance{set;get;}
     private bool[,] allowedMoves{set;get;}
     public Marble[,] Marbles {set;get;}
-    private Marble selectedMarble;
+    public Marble selectedMarble;
 
     private const float TILE_SIZE = 1.0f;
     private const float TILE_OFFSET = 0.5f;
@@ -25,10 +25,10 @@ public class BoardManager : MonoBehaviour
 
     public int moves_left = 20;
 
-    public int level_number = 111;
+    public int level_number = 1;
 
     public List<GameObject> boardPiecesPrefabs;
-    private List<GameObject> activePiece;
+    public List<GameObject> activePiece;
     private int strtx = 0;
     private int strty = 7;
 
@@ -42,6 +42,8 @@ public class BoardManager : MonoBehaviour
 
     private void Start()
     {
+        NumOfLevel.leveln = level_number;
+        LevelMovesLeft.movesl = 0 + BoardManager.Instance.moves_left;
         //Cursor.lockState = CursorLockMode.None;
         SpawnAllLevel();
     }
@@ -69,7 +71,7 @@ public class BoardManager : MonoBehaviour
 
 
 
-    static bool isPath(Marble[,] matrix,int x, int y, int fx, int fy, int n)
+    bool isPath(Marble[,] matrix,int x, int y, int fx, int fy, int n)
 {
      
     // Defining visited array to keep
@@ -115,7 +117,7 @@ public class BoardManager : MonoBehaviour
 }
  
 // Method for checking boundaries
-public static bool isSafe(int i, int j,
+public bool isSafe(int i, int j,
                           Marble[,] matrix)
 {
     if (i >= 0 && i < matrix.GetLength(0) &&
@@ -128,7 +130,7 @@ public static bool isSafe(int i, int j,
 // Returns true if there is a path from
 // a source (a cell with value 1) to a
 // destination (a cell with value 2)
-public static bool isPath(Marble[,] matrix,int fx,int fy, int i,
+public bool isPath(Marble[,] matrix,int fx,int fy, int i,
                           int j, bool[,] visited)
 {
      
@@ -175,7 +177,7 @@ public static bool isPath(Marble[,] matrix,int fx,int fy, int i,
             return true;
  
         // Traverse right
-        bool right = isPath(matrix, i,fx,fy, j + 1,
+        bool right = isPath(matrix, fx,fy,i, j + 1,
                             visited);
  
         // If path is found in right
@@ -208,6 +210,12 @@ public static bool isPath(Marble[,] matrix,int fx,int fy, int i,
     {
          int addx = selectedMarble.CurrentX-x;
         int addy = selectedMarble.CurrentY-y;
+        if (allowedMoves[x, y] == false)
+        {
+            BoardHighlights.Instance.HideHighlights();
+            selectedMarble = null; 
+            return;
+        }
         if(selectedMarble.GetType() == typeof(EntangledMarble)){
             Marble c = null;
             List<Marble> existingOnes = new List<Marble>();
@@ -381,16 +389,19 @@ public static bool isPath(Marble[,] matrix,int fx,int fy, int i,
             {
                 Destroy(ob);
             }
-            if (level_number == 333)
+            if (level_number == 5)
             {
                 SceneManager.LoadScene(3);
             }
             else
             {
-                level_number += 111;
+                LevelMovesLeft.movesl += 111;
+                level_number += 1;
+                NumOfLevel.leveln = level_number;
                 SpawnAllLevel();
             }
         }
+        LevelMovesLeft.movesl = moves_left;
     }
 
     private void UpdateSelection()
@@ -473,6 +484,7 @@ public static bool isPath(Marble[,] matrix,int fx,int fy, int i,
         List<string> fileLines = File.ReadAllLines(readFromFilePath).ToList();
 
         moves_left = Int16.Parse(fileLines[0]);
+        LevelMovesLeft.movesl = moves_left;
 
         for (int i = 0; i < 8; ++i)
         {
@@ -483,7 +495,7 @@ public static bool isPath(Marble[,] matrix,int fx,int fy, int i,
         }
     }
 
-    private void SpawnAllLevel()
+    public void SpawnAllLevel()
     {
         Cursor.lockState = CursorLockMode.None;
         activePiece = new List<GameObject>();
